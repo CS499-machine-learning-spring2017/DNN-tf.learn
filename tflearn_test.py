@@ -34,7 +34,7 @@ def main():
     # Fit model.
     classifier.fit(x=training_set.data,
                    y=training_set.target,
-                   steps=10000)
+                   steps=9000)
     
     # Evaluate accuracy.
     accuracy_score = classifier.evaluate(x=test_set.data, y=test_set.target)["accuracy"]
