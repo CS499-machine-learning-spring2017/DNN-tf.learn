@@ -93,8 +93,8 @@ generator = preprocessing.preprocess(input_file, label_file, window_size)
 features = []
 labels = []
 features, labels = zip(*generator)
-features = np.asarray(int(features))
-labels = np.asarray(int(labels))   
+features = np.asarray(features)
+labels = np.asarray(labels)   
 
 # Launch the graph
 with tf.Session() as sess:
