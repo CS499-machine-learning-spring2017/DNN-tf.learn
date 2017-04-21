@@ -23,11 +23,20 @@ BATCH_SIZE = 9 #how many data points to run through between each
                 #update to the model
 '''display_step = 1''' #removed because it made the code more confusing
 
+#######################################################
+############        MAIN            ###################
+#######################################################
+if __name__ == "__main__":
+    input_file = str(sys.argv[3])
+    label_file = str(sys.argv[4])
+    window_size = int(sys.argv[1])
+    num_examples = int(sys.argv[2])
+
 # Network Parameters
 n_hidden_1 = 9 # number of nodes in 1st layer
 n_hidden_2 = 9 # number of nodes in 2nd layer
-#data_size =  window_size #number of features SHOULDN'T BE A CONSTANT
-CLASSES = 3 #possible classifications to choose between
+data_size =  window_size*window_size #number of features SHOULDN'T BE A CONSTANT
+CLASSES = 4 #possible classifications to choose between
 
 
 ####################################################################
@@ -83,41 +92,30 @@ def create_subconnected_layer(x, weights, biases, num_subgraphs):
 def multilayer_perceptron(x, weights, biases):
     # Hidden layer with RELU activation
     layer_1 = create_subconnected_layer(x, weights['h1'], biases['b1'], layer_1_subgraphs)
-    print(layer_1.get_shape().as_list())
-    print(x.get_shape().as_list())
-    
+  
     
     # Hidden layer with RELU activation
     layer_2 = create_subconnected_layer(layer_1, weights['h2'], biases['b2'], layer_2_subgraphs)
-    print(layer_2.get_shape().as_list())
     # Output layer with linear activation
     out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
-    print(out_layer.get_shape().as_list())
     return out_layer
 
 
 
 
 
-#######################################################
-############        MAIN            ###################
-#######################################################
-if __name__ == "__main__":
-    input_file = str(sys.argv[3])
-    label_file = str(sys.argv[4])
-    window_size = int(sys.argv[1])
-    num_examples = int(sys.argv[2])
+
 
 
 # tf Graph input
-x = tf.placeholder("float", [None, window_size])  #inputs 
+x = tf.placeholder("float", [None, data_size])  #inputs 
 y_ = tf.placeholder("float", [None, CLASSES])   #ground-truth labels
 
 
 # Create model with subgraphs
-layer_1_subgraphs = 3 # How many fully connected subgraphs in layer 1?
+layer_1_subgraphs = 1 # How many fully connected subgraphs in layer 1?
 layer_2_subgraphs = 1 # How many fully connected subgraphs in layer 2?
-assert window_size % layer_1_subgraphs == 0
+assert data_size % layer_1_subgraphs == 0
 assert n_hidden_1 % layer_1_subgraphs == 0
 assert n_hidden_2 % layer_2_subgraphs == 0
 assert CLASSES % layer_2_subgraphs == 0
@@ -126,7 +124,7 @@ assert CLASSES % layer_2_subgraphs == 0
 
 #Store layers weight & bias
 weights = {
-    'h1': [tf.Variable(tf.random_normal([int(window_size/layer_1_subgraphs), int(n_hidden_1/layer_1_subgraphs)])) for s in range(0, layer_1_subgraphs)],
+    'h1': [tf.Variable(tf.random_normal([int(data_size/layer_1_subgraphs), int(n_hidden_1/layer_1_subgraphs)])) for s in range(0, layer_1_subgraphs)],
     'h2': [tf.Variable(tf.random_normal([int(n_hidden_1/layer_2_subgraphs), int(n_hidden_2/layer_2_subgraphs)])) for s in range(0, layer_2_subgraphs)],
     'out': tf.Variable(tf.random_normal([int(n_hidden_2), int(CLASSES)]))
 }
@@ -153,22 +151,22 @@ init = tf.global_variables_initializer()
 generator = preprocessing.preprocess(input_file, label_file, window_size)
 features = []
 labels = []
-for _ in range(num_examples):
-    curr = next(generator)
-    #need to convert all to int
+for count, curr in enumerate(generator):
+    if count > num_examples:
+        break
     curr_features = curr[0]
-    curr_features = list(map(int, curr_features))
-    print(curr_features)
-    print(curr[1])
+    curr_features = list(map(int, curr_features)) 
+    curr_labels = curr[1]
+    curr_labels = list(map(int, curr_labels))
     features.append(curr_features)
-    labels.append(curr[1])
-
+    labels.append(curr_labels)    
+print(features[0])
+print(labels[0])
 features = np.asarray(features)
 labels = np.asarray(labels)  
 print(features.shape)
 print(labels.shape)
 
-tf.get_shape
 # Launch the graph
 with tf.Session() as sess:
     sess.run(init)
